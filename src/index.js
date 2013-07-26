@@ -112,7 +112,7 @@ function select(selector_string, context_string){
       })
       return {
         method:'post',
-        url:warehouseurl + '/resolve',
+        url:(warehouseurl + '/resolve').replace(/\/\//g, '/'),
         body:{
           selectors:selectors,
           skeleton:skeleton
