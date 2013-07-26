@@ -107,6 +107,8 @@ function select(selector_string, context_string){
     body:warehouseurls.map(function(warehouseurl){
       var skeleton = groups[warehouseurl].map(function(c){
         return c.get(0)._digger;
+      }).filter(function(digger){
+        return digger.tag!='_supplychain';
       })
       return {
         method:'post',
