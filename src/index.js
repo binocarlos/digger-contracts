@@ -101,7 +101,7 @@ function select(selector_string, context_string){
     it is a merge of the various warehouse targets
     
   */
-  return {
+  var raw = {
     method:'post',
     url:'/reception',
     body:warehouseurls.map(function(warehouseurl){
@@ -119,6 +119,8 @@ function select(selector_string, context_string){
       }
     })
   }
+
+  return this.supplychain ? this.supplychain.contract(raw) : raw;
 }
 
 /*
@@ -146,11 +148,13 @@ function append(appendcontainer){
 
   appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
 
-  return {
+  var raw = {
     method:'post',
     url:appendto.diggerurl(),
     body:appendmodels
   }
+
+  return this.supplychain ? this.supplychain.contract(raw) : raw;
 
   /*
   var contract = this.supplychain.contract(request);
@@ -186,7 +190,7 @@ function save(){
     throw new Error('there is nothing to save');
   }
 
-  return {
+  var raw = {
     method:'post',
     url:'/reception',
     body:this.map(function(container){
@@ -201,6 +205,8 @@ function save(){
       }
     })
   }
+
+  return this.supplychain ? this.supplychain.contract(raw) : raw;
 }
 
 /*
@@ -214,7 +220,7 @@ function remove(){
     throw new Error('there is nothing to delete');
   }
 
-  return {
+  var raw = {
     method:'post',
     url:'/reception',
     body:this.map(function(container){
@@ -224,4 +230,6 @@ function remove(){
       }
     })
   }
+
+  return this.supplychain ? this.supplychain.contract(raw) : raw;
 }
