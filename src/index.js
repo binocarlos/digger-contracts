@@ -122,7 +122,9 @@ function select(selector_string, context_string){
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw) : raw;
+  return this.supplychain ? this.supplychain.contract(raw, function(results){
+    return self.spawn(results);
+  }) : raw;
 }
 
 /*
@@ -156,12 +158,7 @@ function append(appendcontainer){
     body:appendmodels
   }
 
-  return this.supplychain ? this.supplychain.contract(raw) : raw;
-
-  /*
-  var contract = this.supplychain.contract(request);
-
-  contract.parse_results(function(results){
+  return this.supplychain ? this.supplychain.contract(raw, function(results){
     var map = {};
     appendmodels.forEach(function(model){
       map[model._digger.diggerid] = model;
@@ -175,10 +172,7 @@ function append(appendcontainer){
       }
     })
     return self.spawn(results);
-  })
-
-  return contract;
-  */
+  }) : raw;
 }
 
 /*
