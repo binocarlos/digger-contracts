@@ -17,6 +17,7 @@
 */
 
 var Selector = require('digger-selector');
+var utils = require('digger-utils');
 
 module.exports = {
   select:select,
@@ -104,6 +105,9 @@ function select(selector_string, context_string){
   var raw = {
     method:'post',
     url:'/reception',
+    headers:{
+      'x-contract-id':utils.diggerid()
+    },
     body:warehouseurls.map(function(warehouseurl){
       var skeleton = groups[warehouseurl].map(function(c){
         return c.get(0)._digger;
@@ -112,6 +116,9 @@ function select(selector_string, context_string){
       })
       return {
         method:'post',
+        headers:{
+          'x-contract-id':utils.diggerid()
+        },
         url:(warehouseurl + '/resolve').replace(/\/\//g, '/'),
         body:{
           selectors:selectors,
@@ -154,6 +161,9 @@ function append(appendcontainer){
 
   var raw = {
     method:'post',
+    headers:{
+      'x-contract-id':utils.diggerid()
+    },
     url:appendto.diggerurl(),
     body:appendmodels
   }
@@ -188,6 +198,9 @@ function save(){
 
   var raw = {
     method:'post',
+    headers:{
+      'x-contract-id':utils.diggerid()
+    },
     url:'/reception',
     body:this.map(function(container){
       var model = container.get(0);
@@ -196,6 +209,9 @@ function save(){
       delete(savemodel._digger.data);
       return {
         method:'put',
+        headers:{
+          'x-contract-id':utils.diggerid()
+        },
         url:container.diggerurl(),
         body:savemodel
       }
@@ -219,9 +235,15 @@ function remove(){
   var raw = {
     method:'post',
     url:'/reception',
+    headers:{
+      'x-contract-id':utils.diggerid()
+    },
     body:this.map(function(container){
       return {
         method:'delete',
+        headers:{
+          'x-contract-id':utils.diggerid()
+        },
         url:container.diggerurl()        
       }
     })

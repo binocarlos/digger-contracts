@@ -27,6 +27,7 @@
     "digger-container": "~0.0.8"
   },
   "dependencies": {
-    "digger-selector": "~0.0.3"
+    "digger-selector": "~0.0.3",
+    "digger-utils":"~1.0.1"
   }
 }
