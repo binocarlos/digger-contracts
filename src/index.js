@@ -106,6 +106,8 @@ function select(selector_string, context_string){
     method:'post',
     url:'/reception',
     headers:{
+      'content-type':'digger/contract',
+      'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
     body:warehouseurls.map(function(warehouseurl){
@@ -159,6 +161,11 @@ function append(appendcontainer){
 
   appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
 
+  /*
+  
+    this is a direct request not a contract
+    
+  */
   var raw = {
     method:'post',
     headers:{
@@ -196,9 +203,12 @@ function save(){
     throw new Error('there is nothing to save');
   }
 
+
   var raw = {
     method:'post',
     headers:{
+      'content-type':'digger/contract',
+      'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
     url:'/reception',
@@ -236,6 +246,8 @@ function remove(){
     method:'post',
     url:'/reception',
     headers:{
+      'content-type':'digger/contract',
+      'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
     body:this.map(function(container){
