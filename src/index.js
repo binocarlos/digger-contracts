@@ -204,18 +204,28 @@ function append(appendcontainer){
   var raw = {
     method:'post',
     headers:{
+      'content-type':'digger/contract',
+      'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
-    url:appendto.diggerurl(),
-    body:appendmodels
+    url:'/reception',
+    body:[{
+      method:'post',
+      headers:{
+        'x-contract-id':utils.diggerid()
+      },
+      url:appendto.diggerurl(),
+      body:appendmodels
+    }]
   }
 
   return this.supplychain ? this.supplychain.contract(raw, function(results){
+    results = parse_multipart_response(results);
     var map = {};
     appendmodels.forEach(function(model){
       map[model._digger.diggerid] = model;
     })
-    results.forEach(function(result){
+    results.body.forEach(function(result){
       var model = map[result._digger.diggerid];
       if(model){
         for(var prop in result){

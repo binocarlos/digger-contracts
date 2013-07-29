@@ -54,9 +54,16 @@ describe('contract', function(){
     var contract = placeA.append(child);
 
     contract.method.should.equal('post');
-    contract.url.should.equal(placeA.diggerurl());
+    contract.url.should.equal('/reception');
 
     contract.body.length.should.equal(1);
+
+    var req = contract.body[0];
+
+    req.method.should.equal('post');
+    req.url.should.equal(placeA.diggerurl());
+
+    req.body.length.should.equal(1);
 
     placeA.children().eq(0).tag().should.equal('child');
   })
