@@ -37,6 +37,9 @@ function parse_multipart_response(topres){
   }
 
   function process_response(res){
+    if(!res.headers){
+      res.headers = {};
+    }
     if(res.headers["content-type"]==='digger/multipart'){
       res.body.forEach(function(child_res){
         process_response(child_res);  
