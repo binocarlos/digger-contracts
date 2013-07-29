@@ -26,6 +26,39 @@ module.exports = {
   remove:remove
 }
 
+function parse_multipart_response(topres){
+  var results = {
+    // array of actual results flattened
+    body:[],
+    // array of successful responses
+    success:[],
+    // array of error responses
+    errors:[]
+  }
+
+  function process_response(res){
+    if(res.headers["content-type"]==='digger/multipart'){
+      res.body.forEach(function(child_res){
+        process_response(child_res);  
+      })
+      
+    }
+    else{
+      if(res.statusCode===200){
+        results.body = results.body.concat(res.body);
+        results.success.push(res);
+      }
+      else{
+        results.errors.push(res);
+      }
+    }
+  }
+
+  process_response(topres);
+
+  return results;
+}
+
 /*
 
   SELECT 
@@ -44,6 +77,7 @@ module.exports = {
 */
 function select(selector_string, context_string){
 
+  var self = this;
   if(this.count()<=0){
     throw new Error('attempting a select on an empty container');
   }
@@ -132,7 +166,8 @@ function select(selector_string, context_string){
   }
 
   return this.supplychain ? this.supplychain.contract(raw, function(results){
-    return self.spawn(results);
+    results = parse_multipart_response(results);
+    return self.spawn(results.body || []);
   }) : raw;
 }
 
