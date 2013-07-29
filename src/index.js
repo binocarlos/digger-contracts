@@ -185,6 +185,8 @@ function append(appendcontainer){
     }]
   }
 
+  appendcontainer.supplychain = this.supplychain;
+
   return this.supplychain ? this.supplychain.contract(raw, self).after(function(results){
     var map = {};
     appendmodels.forEach(function(model){
@@ -209,6 +211,7 @@ function append(appendcontainer){
 */
 function save(){
 
+  var self = this;
   if(this.count()<=0){
     throw new Error('there is nothing to save');
   }
@@ -248,6 +251,7 @@ function save(){
 */
 function remove(){
 
+  var self = this;
   if(this.count()<=0){
     throw new Error('there is nothing to delete');
   }
