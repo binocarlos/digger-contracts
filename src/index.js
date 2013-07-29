@@ -26,41 +26,7 @@ module.exports = {
   remove:remove
 }
 
-function parse_multipart_response(topres){
-  var results = {
-    // array of actual results flattened
-    body:[],
-    // array of successful responses
-    success:[],
-    // array of error responses
-    errors:[]
-  }
 
-  function process_response(res){
-    if(!res.headers){
-      res.headers = {};
-    }
-    if(res.headers["content-type"]==='digger/multipart'){
-      res.body.forEach(function(child_res){
-        process_response(child_res);  
-      })
-      
-    }
-    else{
-      if(res.statusCode===200){
-        results.body = results.body.concat(res.body);
-        results.success.push(res);
-      }
-      else{
-        results.errors.push(res);
-      }
-    }
-  }
-
-  process_response(topres);
-
-  return results;
-}
 
 /*
 
@@ -168,10 +134,7 @@ function select(selector_string, context_string){
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw, function(results){
-    results = parse_multipart_response(results);
-    return self.spawn(results.body || []);
-  }) : raw;
+  return this.supplychain ? this.supplychain.contract(raw, self).expect('containers') : raw;
 }
 
 /*
@@ -222,8 +185,7 @@ function append(appendcontainer){
     }]
   }
 
-  return this.supplychain ? this.supplychain.contract(raw, function(results){
-    results = parse_multipart_response(results);
+  return this.supplychain ? this.supplychain.contract(raw, self).after(function(results){
     var map = {};
     appendmodels.forEach(function(model){
       map[model._digger.diggerid] = model;
@@ -276,7 +238,7 @@ function save(){
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw) : raw;
+  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
 }
 
 /*
@@ -309,5 +271,5 @@ function remove(){
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw) : raw;
+  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
 }
