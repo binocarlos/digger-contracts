@@ -26,7 +26,21 @@ module.exports = {
   remove:remove
 }
 
+/*
 
+  return either the first array object
+  or if length > 1 then wrapper.body = list and return wrapper
+  
+*/
+function multiple_branch(list, wrapper){
+  if(list.length<=1){
+    return list[0];
+  }
+  else{
+    wrapper.body = list;
+    return wrapper;
+  }
+}
 
 /*
 
@@ -105,36 +119,103 @@ function select(selector_string, context_string){
     it is a merge of the various warehouse targets
     
   */
-  var raw = {
+
+  /*
+  
+    if there is only a single warehouse url then we do the pipe at the top level
+
+    otherwise we merge all the individual warehouse pipe contracts
+    
+  */
+
+  var topcontract = {};
+
+  function basic_contract(type){
+    return {
+      method:'post',
+      url:'/reception',
+      headers:{
+        'content-type':'digger/contract',
+        'x-contract-type':type,
+        'x-contract-id':utils.diggerid()
+      }
+    }
+  }
+
+  // (warehouseurl + '/resolve').replace(/\/\//g, '/'),
+  function create_warehouse_pipe_contract(warehouseurl){
+    /*
+    
+      create a pipe contract out of the selectors
+      
+    */
+    // this is the skeleton to POST to the start of the chain per phase
+    var skeleton = groups[warehouseurl].map(function(c){
+      return c.get(0)._digger;
+    }).filter(function(digger){
+      return digger.tag!='_supplychain';
+    })
+
+    /*
+    
+      the top level selectors are phases to be merged
+      
+    */
+    var phase_contracts = selectors.reverse().map(function(selector_phase){
+
+      /*
+      
+        a single selector chain
+
+        the first step is posted the skeleton from the client container
+
+        each step is piped the results of the previous
+
+        the reception looks after detecting branches in the results
+        
+      */
+      var selector_contracts = selector_phase.phases.map(function(selector_stages){
+
+        var selector_requests = selector_stages.map(function(selector){
+          return {
+            method:'post',
+            url:(warehouseurl + '/select').replace(/\/\//g, '/'),
+            headers:{
+              'x-json-selector':selector
+            }
+          }  
+        })
+
+        selector_requests[0].body = skeleton;
+
+        return multiple_branch(selector_requests, basic_contract('pipe'));
+      })
+
+      return multiple_branch(selector_contracts, basic_contract('merge'));
+    })
+
+    return multiple_branch(phase_contracts, basic_contract('pipe'))
+  }
+
+  /*
+  
+    the top level warehouse grouped contracts
+
+    either a single set of selector resolvers or an array of merges across warehouses
+    
+  */
+  var warehouse_pipe_contracts = warehouseurls.map(create_warehouse_pipe_contract);
+  var topcontract = multiple_branch(warehouse_pipe_contracts,  {
     method:'post',
     url:'/reception',
     headers:{
       'content-type':'digger/contract',
       'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
-    },
-    body:warehouseurls.map(function(warehouseurl){
-      var skeleton = groups[warehouseurl].map(function(c){
-        return c.get(0)._digger;
-      }).filter(function(digger){
-        return digger.tag!='_supplychain';
-      })
-      return {
-        method:'post',
-        headers:{
-          'x-contract-id':utils.diggerid()
-        },
-        url:(warehouseurl + '/resolve').replace(/\/\//g, '/'),
-        body:{
-          selectors:selectors,
-          skeleton:skeleton
-        }
+    }
+  })
 
-      }
-    })
-  }
-
-  return this.supplychain ? this.supplychain.contract(raw, self).expect('containers') : raw;
+  return this.supplychain ? this.supplychain.contract(topcontract, self).expect('containers') : topcontract;
 }
 
 /*
