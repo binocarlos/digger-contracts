@@ -176,6 +176,11 @@ function select(selector_string, context_string){
       */
       var selector_contracts = selector_phase.phases.map(function(selector_stages){
 
+        var last_selector = selector_stages[selector_stages.length-1];
+        var modifier = last_selector.modifier || {};
+        modifier.laststep = true;
+        last_selector.modifier = modifier;
+        
         var selector_requests = selector_stages.map(function(selector){
           return {
             method:'post',
@@ -351,7 +356,7 @@ function remove(){
         headers:{
           'x-contract-id':utils.diggerid()
         },
-        url:container.diggerurl()        
+        url:container.diggerurl()
       }
     })
   }
