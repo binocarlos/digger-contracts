@@ -278,7 +278,7 @@ function append(appendcontainer){
     appendmodels.forEach(function(model){
       map[model._digger.diggerid] = model;
     })
-    results.body.forEach(function(result){
+    results.forEach(function(result){
       var model = map[result._digger.diggerid];
       if(model){
         for(var prop in result){
