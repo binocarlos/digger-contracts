@@ -22,6 +22,17 @@ describe('contract', function(){
 
   })
 
+
+  it('should assign the content type as json', function(){
+    var placeA = Container('testa');
+    placeA.diggerid('123');
+    placeA.diggerwarehouse('/placeA');
+
+    var contract = placeA('product');
+
+    contract.headers['Content-Type'].should.equal('application/json');
+  })
+
   it('should create a contract from a simple container select action', function(){
     var placeA = Container('testa');
     placeA.diggerid('123');

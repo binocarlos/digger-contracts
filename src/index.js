@@ -135,7 +135,7 @@ function select(selector_string, context_string){
       method:'post',
       url:'/reception',
       headers:{
-        'content-type':'digger/contract',
+        'Content-Type':'application/json',
         'x-contract-type':type,
         'x-contract-id':utils.diggerid()
       }
@@ -186,6 +186,7 @@ function select(selector_string, context_string){
             method:'post',
             url:(warehouseurl + '/select').replace(/\/\//g, '/'),
             headers:{
+              'Content-Type':'application/json',
               'x-json-selector':selector
             }
           }  
@@ -214,7 +215,7 @@ function select(selector_string, context_string){
     method:'post',
     url:'/reception',
     headers:{
-      'content-type':'digger/contract',
+      'Content-Type':'application/json',
       'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     }
@@ -256,7 +257,7 @@ function append(appendcontainer){
   var raw = {
     method:'post',
     headers:{
-      'content-type':'digger/contract',
+      'Content-Type':'application/json',
       'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
@@ -264,6 +265,7 @@ function append(appendcontainer){
     body:[{
       method:'post',
       headers:{
+        'Content-Type':'application/json',
         'x-contract-id':utils.diggerid()
       },
       url:appendto.diggerurl(),
@@ -306,7 +308,7 @@ function save(){
   var raw = {
     method:'post',
     headers:{
-      'content-type':'digger/contract',
+      'Content-Type':'application/json',
       'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
@@ -319,6 +321,7 @@ function save(){
       return {
         method:'put',
         headers:{
+          'Content-Type':'application/json',
           'x-contract-id':utils.diggerid()
         },
         url:container.diggerurl(),
@@ -346,7 +349,7 @@ function remove(){
     method:'post',
     url:'/reception',
     headers:{
-      'content-type':'digger/contract',
+      'Content-Type':'application/json',
       'x-contract-type':'merge',
       'x-contract-id':utils.diggerid()
     },
@@ -354,6 +357,7 @@ function remove(){
       return {
         method:'delete',
         headers:{
+          'Content-Type':'application/json',
           'x-contract-id':utils.diggerid()
         },
         url:container.diggerurl()
