@@ -83,7 +83,7 @@ function select(selector_string, context_string){
   var selectors = strings.map(function(selector){
     return Selector(selector);
   })
-  
+
   /*
   
     the 'context' are the models inside 'this' container
