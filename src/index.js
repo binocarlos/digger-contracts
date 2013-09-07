@@ -227,7 +227,6 @@ function select(selector_string, context_string){
 /*
 
   POST
-
   
 */
 function append(appendcontainer){
@@ -318,6 +317,19 @@ function save(){
       var savemodel = JSON.parse(JSON.stringify(model));
       delete(savemodel._children);
       delete(savemodel._digger.data);
+
+      // remove the linked attributes we don't want to save those
+      var links = container.digger('symlinks') || {};
+
+      for(var linkid in links){
+        var link = links[linkid];
+
+        if(link.type=='attr'){
+          delete(savemodel[link.field]);
+        }
+      }
+
+
       return {
         method:'put',
         headers:{
