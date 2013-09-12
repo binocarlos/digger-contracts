@@ -20,6 +20,7 @@ var Selector = require('digger-selector');
 var utils = require('digger-utils');
 
 module.exports = {
+  request:request,
   select:select,
   append:append,
   save:save,
@@ -40,6 +41,57 @@ function multiple_branch(list, wrapper){
     wrapper.body = list;
     return wrapper;
   }
+}
+
+/*
+
+  REQUEST
+
+  send a plain JavaScript request object back to a warehouse
+
+  if we are at supplychain level then the url will be the warehouse
+
+  if we have a container then the url will be +/<id>
+  
+*/
+function request(req){
+  var self = this;
+  if(this.count()<=0){
+    throw new Error('there is nothing to delete');
+  }
+
+  var requests = [];
+
+  this.each(function(container){
+    var parts = [container.diggerwarehouse()];
+    if(container.tag()!='_supplychain'){
+      parts.push(container.diggerid());
+    }
+    parts.push(req.url.replace(/\//, ''));
+    var clone = JSON.parse(JSON.stringify(req));
+    clone.url = parts.join('/');
+    requests.push(clone);
+  })
+
+  var raw;
+
+  if(requests.length>1){
+    raw = {
+      method:'post',
+      url:'/reception',
+      headers:{
+        'Content-Type':'application/json',
+        'x-contract-type':'merge',
+        'x-contract-id':utils.diggerid()
+      },
+      body:requests
+    }
+  }
+  else{
+    raw = requests[0];
+  }
+
+  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
 }
 
 /*
