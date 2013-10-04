@@ -293,6 +293,11 @@ function append(appendcontainer){
     throw new Error('there is nothing to append to');
   }
 
+  appendcontainer.recurse(function(a){
+    a.removeAttr('_digger.diggerwarehouse');
+    a.removeAttr('_digger.diggerpath');
+  })
+
   var appendmodels = appendcontainer.models;
   
   var appendto = this.eq(0);
