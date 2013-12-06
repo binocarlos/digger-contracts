@@ -9,6 +9,8 @@ The contract factory for digger server requests
 	
 	$ npm install digger-contracts
 
+or in the browser using [browserify](https://github.com/substack/node-browserify)
+
 ## select example
 Generate a HTTP request representing a select query upon a digger container
 

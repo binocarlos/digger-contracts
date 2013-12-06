@@ -3,7 +3,7 @@ var Container = require('digger-container');
 
 function augment_prototype(api){
   for(var prop in api){
-    Container.proto.prototype[prop] = api[prop];
+    Container.prototype[prop] = api[prop];
   }
 }
 
