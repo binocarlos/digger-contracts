@@ -1,6 +1,8 @@
 digger-contracts
 ================
 
+![Build status](https://api.travis-ci.org/binocarlos/digger-contracts.png)
+
 The contract factory for digger server requests
 
 ## installation
