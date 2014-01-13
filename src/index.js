@@ -331,21 +331,28 @@ function append(appendcontainer){
 
   appendcontainer.supplychain = this.supplychain;
 
-  return this.supplychain ? this.supplychain.contract(raw, self).after(function(results){
-    var map = {};
-    appendmodels.forEach(function(model){
-      map[model._digger.diggerid] = model;
-    })
-    results.forEach(function(result){
-      var model = map[result._digger.diggerid];
-      if(model){
-        for(var prop in result){
-          model[prop] = result[prop];
+  if(this.supplychain){
+    var contract = this.supplychain.contract(raw, self);
+
+    contract.on('results', function(results){
+      var map = {};
+      appendmodels.forEach(function(model){
+        map[model._digger.diggerid] = model;
+      })
+      results.forEach(function(result){
+        var model = map[result._digger.diggerid];
+        if(model){
+          for(var prop in result){
+            model[prop] = result[prop];
+          }
         }
-      }
+      })
+      return self.spawn(results);
     })
-    return self.spawn(results);
-  }) : raw;
+  }
+  else{
+    return raw;
+  }
 }
 
 /*
