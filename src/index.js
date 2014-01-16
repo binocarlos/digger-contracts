@@ -349,6 +349,8 @@ function append(appendcontainer){
       })
       return self.spawn(results);
     })
+
+    return contract;
   }
   else{
     return raw;
