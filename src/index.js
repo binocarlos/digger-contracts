@@ -226,7 +226,7 @@ function select(selector_string, context_string){
         the reception looks after detecting branches in the results
         
       */
-      var selector_contracts = selector_phase.phases.map(function(selector_stages){
+      var selector_contracts = (selector_phase.phases || []).map(function(selector_stages){
 
         var last_selector = selector_stages[selector_stages.length-1];
         var modifier = last_selector.modifier || {};
