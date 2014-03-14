@@ -213,7 +213,9 @@ function select(selector_string, context_string){
       the top level selectors are phases to be merged
       
     */
-    var phase_contracts = selectors.reverse().map(function(selector_phase){
+    var phase_contracts = selectors.reverse().filter(function(p){
+      return p ? true : false;
+    }).map(function(selector_phase){
 
       /*
       
