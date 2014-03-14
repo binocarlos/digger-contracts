@@ -1,6 +1,6 @@
 {
   "name": "digger-contracts",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "The contract factory for digger server requests",
   "main": "src/index.js",
   "scripts": {
