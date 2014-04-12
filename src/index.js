@@ -15,11 +15,47 @@ function Contract(req, supplychain){
 }
 
 Contract.prototype.stream = function(){
+  if(!this.req){
+    this.emit('error', 'no models in container');
+    return;
+  }
+  if(!this.supplychain){
+    this.emit('error', 'no supplychain assigned');
+    return;
+  }
   return this.supplychain.stream(this);
 }
 
 Contract.prototype.ship = function(fn){
-  return this.supplychain.ship(this);
+  if(!this.req){
+    this.emit('error', 'no models in container');
+    return;
+  }
+  if(!this.supplychain){
+    this.emit('error', 'no supplychain assigned');
+    return;
+  }
+  return this.supplychain.ship(this, fn);
+}
+
+Contract.prototype.merge = function(contract){
+  if(this.req.url==='/merge'){
+    if(contract.req.url==='/merge'){
+      this.req.body = (this.req.body || []).concat(contract.req.body);
+    }
+    else{
+      this.req.body.push(contract.req)
+    }
+  }
+  else{
+    this.req = {
+      method:'post',
+      url:'/merge',
+      body:[this.req, contract.req]
+    }
+  }
+
+  return this;
 }
 
 function select(selector_string, context_string){

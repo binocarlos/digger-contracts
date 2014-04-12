@@ -132,6 +132,99 @@ describe('contract', function(){
     req.url.should.equal('/data/123/10');
   })
 
+  it('should merge an existing contract with another merge contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var contractA = placeA.remove();
+
+    var placeB = Container('testb');
+    placeB.path('/124');
+    placeB.inode('11');
+
+    var contractB = placeB.remove();
+
+    var contract = contractA.merge(contractB);
+
+    contract.req.method.should.equal('post');
+    contract.req.url.should.equal('/merge');
+
+    contract.req.body.length.should.equal(2);
+
+    var reqA = contract.req.body[0];
+
+    reqA.method.should.equal('delete');
+    reqA.url.should.equal('/data/123/10');
+
+    var reqB = contract.req.body[1];
+
+    reqB.method.should.equal('delete');
+    reqB.url.should.equal('/data/124/11');
+  })
+
+
+  it('should merge an append contract with another append contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var contractA = placeA.append(Container('childA'));
+
+    var placeB = Container('testb');
+    placeB.path('/124');
+    placeB.inode('11');
+
+    var contractB = placeB.append(Container('childB'));
+
+    var contract = contractA.merge(contractB);
+
+    contract.req.method.should.equal('post');
+    contract.req.url.should.equal('/merge');
+
+    contract.req.body.length.should.equal(2);
+
+    var reqA = contract.req.body[0];
+
+    reqA.method.should.equal('post');
+    reqA.url.should.equal('/data/123/10');
+
+    var reqB = contract.req.body[1];
+
+    reqB.method.should.equal('post');
+    reqB.url.should.equal('/data/124/11');
+  })
+
+  it('should merge an select contract with another merge contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var contractA = placeA.append(Container('childA'));
+
+    var placeB = Container('testb');
+    placeB.path('/124');
+    placeB.inode('11');
+
+    var contractB = placeB('thing');
+
+    var contract = contractA.merge(contractB);
+
+    contract.req.method.should.equal('post');
+    contract.req.url.should.equal('/merge');
+
+    contract.req.body.length.should.equal(2);
+
+    var reqA = contract.req.body[0];
+
+    reqA.method.should.equal('post');
+    reqA.url.should.equal('/data/123/10');
+
+    var reqB = contract.req.body[1];
+
+    reqB.method.should.equal('post');
+    reqB.url.should.equal('/select');
+  })
 
 
 })
