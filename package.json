@@ -24,9 +24,9 @@
   "devDependencies": {
     "mocha": "~1.14.0",
     "should": "~2.1.0",
-    "digger-container": "~2.1.0"
+    "digger-container": "^2.1.0"
   },
   "dependencies": {
-    "digger-utils": "~2.0.1"
+    "digger-utils": "^2.0.1"
   }
 }

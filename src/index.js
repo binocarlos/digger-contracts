@@ -55,12 +55,16 @@ function select(selector_string, context_string){
     url:'/select',
     headers:{
       'x-digger-selector':selector_string,
-      'x-digger-context':context_string,
+      
       'Content-Type':'application/json'
     },
     body:this.map(function(container){
       return container.diggerurl()
     })
+  }
+
+  if(context_string){
+    req.headers['x-digger-context'] = context_string;
   }
 
   return new Contract(req, this.supplychain)

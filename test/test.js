@@ -51,13 +51,26 @@ describe('contract', function(){
     placeA.path('/123');
     placeA.inode('10');
 
-    var contract = placeA('product');
+    var contract = placeA('product', 'folder#hello');
 
     contract.req.method.should.equal('post');
     contract.req.url.should.equal('/select');
+    contract.req.headers['x-digger-selector'].should.equal('product');
+    contract.req.headers['x-digger-context'].should.equal('folder#hello');
 
     contract.req.body.length.should.equal(1);
     contract.req.body[0].should.equal('/123/10')
+  })
+
+
+  it('the context header should not be set with no context given', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var contract = placeA('product');
+
+    (contract.req.headers['x-digger-context']===undefined).should.equal(true);
   })
 
   it('should create a append contract', function(){
