@@ -1,305 +1,89 @@
-/*
-
-	(The MIT License)
-
-	Copyright (C) 2005-2013 Kai Davenport
-
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- */
-
-/*
-  Module dependencies.
-*/
-
-var Selector = require('digger-selector');
 var utils = require('digger-utils');
+var EventEmitter = require('events').EventEmitter;
 
-module.exports = {
-  request:request,
-  select:select,
-  append:append,
-  save:save,
-  remove:remove
-}
-
-/*
-
-  return either the first array object
-  or if length > 1 then wrapper.body = list and return wrapper
-  
-*/
-function multiple_branch(list, wrapper){
-  if(list.length<=1){
-    return list[0];
-  }
-  else{
-    wrapper.body = list;
-    return wrapper;
+module.exports = function(supplychain){
+  return {
+    select:select(supplychain),
+    append:append(supplychain),
+    save:save(supplychain),
+    remove:remove(supplychain)
   }
 }
 
+function Contract(req, supplychain){
+  EventEmitter.call(this);
+  this.req = req;
+  this.supplychain = supplychain;
+}
+
 /*
+Contract.prototype.stream = function(){
+  return this.supplychain.stream(this.req);
+}*/
 
-  REQUEST
-
-  send a plain JavaScript request object back to a warehouse
-
-  if we are at supplychain level then the url will be the warehouse
-
-  if we have a container then the url will be +/<id>
-  
-*/
-function request(req){
+Contract.prototype.ship = function(fn){
   var self = this;
-  if(this.count()<=0){
-    throw new Error('there is nothing to delete');
+  if(!this.req){
+    this.emit('error', 'No request given');
+    fn && fn('No request given');
+    return;
   }
-
-  var requests = [];
-
-  this.each(function(container){
-    var parts = [container.diggerwarehouse()];
-    if(container.tag()!='_supplychain'){
-      parts.push(container.diggerid());
+  if(!this.supplychain){
+    this.emit('error', 'No supplychain registered');
+    fn && fn('No supplychain registered');
+    return;
+  }
+  this.supplychain.emit('request', this.req, function(error, results){
+    if(error){
+      self.emit('error', error);
     }
-    parts.push(req.url.replace(/\//, ''));
-    var clone = JSON.parse(JSON.stringify(req));
-    clone.url = parts.join('/');
-    requests.push(clone);
+    else{
+      self.emit('success', results);
+    }
+    self.emit('complete', error, results);
+    fn && fn(error, results);
   })
-
-  var raw;
-
-  if(requests.length>1){
-    raw = {
-      method:'post',
-      url:'/reception',
-      headers:{
-        'Content-Type':'application/json',
-        'x-contract-type':'merge',
-        'x-contract-id':utils.diggerid()
-      },
-      body:requests
-    }
-  }
-  else{
-    raw = requests[0];
-  }
-
-  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
 }
 
-/*
-
-  SELECT 
-  turns an array of selector strings into a pipe contract
-
-  the strings are reversed as in:
-
-    "selector", "context"
-
-  becomes
-
-    context selector
-
-  in the actual search (this is just how jQuery works)
-  
-*/
 function select(selector_string, context_string){
-
   var self = this;
+
   if(this.count()<=0){
-    throw new Error('attempting a select on an empty container');
+    return new Contract();
   }
 
-  /*
-  
-    first get an array of selector objects
-
-    we make a pipe contract out of these
-
-    then duplicate that pipe contract for each different diggerwarehouse
-
-    
-  */
-  var strings = [selector_string];
-  if(arguments.length>1){
-    strings.push(context_string);
-  }
-  
-  var selectors = strings.map(function(selector){
-    return Selector(selector);
-  })
-
-  /*
-  
-    the 'context' are the models inside 'this' container
-
-    the _digger objects will be sent as the body of the select request
-    for each supplier to use as the context (i.e. starting point for the query)
-
-    
-  */
-
-  var context = this.containers();
-
-  /*
-  
-    split out the current context into their warehouse origins
-    
-  */
-  var groups = {};
-
-  this.each(function(container){
-    var warehouse = container.diggerwarehouse() || '/';
-    var arr = groups[warehouse] || [];
-    arr.push(container);
-    groups[warehouse] = arr;
-  })
-  
-  var warehouseurls = Object.keys(groups);
-
-  /*
-  
-    the top level contract - this will be resolved in the holdingbay
-
-    it is a merge of the various warehouse targets
-    
-  */
-
-  /*
-  
-    if there is only a single warehouse url then we do the pipe at the top level
-
-    otherwise we merge all the individual warehouse pipe contracts
-    
-  */
-
-  var topcontract = {};
-
-  function basic_contract(type){
-    return {
+  var req = {
       method:'post',
-      url:'/reception',
+      url:'/select',
       headers:{
-        'Content-Type':'application/json',
-        'x-contract-type':type,
-        'x-contract-id':utils.diggerid()
-      }
-    }
-  }
-
-  // (warehouseurl + '/resolve').replace(/\/\//g, '/'),
-  function create_warehouse_pipe_contract(warehouseurl){
-    /*
-    
-      create a pipe contract out of the selectors
-      
-    */
-    // this is the skeleton to POST to the start of the chain per phase
-    var skeleton = groups[warehouseurl].map(function(c){
-      return c.get(0)._digger;
-    }).filter(function(digger){
-      return digger.tag!='_supplychain';
-    })
-
-    /*
-    
-      the top level selectors are phases to be merged
-      
-    */
-    var phase_contracts = selectors.reverse().filter(function(p){
-      return p ? true : false;
-    }).map(function(selector_phase){
-
-      /*
-      
-        a single selector chain
-
-        the first step is posted the skeleton from the client container
-
-        each step is piped the results of the previous
-
-        the reception looks after detecting branches in the results
-        
-      */
-      var selector_contracts = (selector_phase.phases || []).map(function(selector_stages){
-
-        var last_selector = selector_stages[selector_stages.length-1];
-        var modifier = last_selector.modifier || {};
-        modifier.laststep = true;
-        last_selector.modifier = modifier;
-        
-        var selector_requests = selector_stages.map(function(selector){
-          return {
-            method:'post',
-            url:(warehouseurl + '/select').replace(/\/\//g, '/'),
-            headers:{
-              'Content-Type':'application/json',
-              'x-json-selector':selector
-            }
-          }  
-        })
-
-        selector_requests[0].body = skeleton;
-
-        return multiple_branch(selector_requests, basic_contract('pipe'));
+        'x-digger-selector':selector_string,
+        'x-digger-context:':context_string
+      },
+      body:this.map(function(container){
+        return container.diggerurl()
       })
-
-      return multiple_branch(selector_contracts, basic_contract('merge'));
-    })
-
-    return multiple_branch(phase_contracts, basic_contract('pipe'))
+    }
   }
 
-  /*
+  return new Contract(req, this.supplychain)
   
-    the top level warehouse grouped contracts
-
-    either a single set of selector resolvers or an array of merges across warehouses
-    
-  */
-  var warehouse_pipe_contracts = warehouseurls.map(create_warehouse_pipe_contract);
-  var topcontract = multiple_branch(warehouse_pipe_contracts,  {
-    method:'post',
-    url:'/reception',
-    headers:{
-      'Content-Type':'application/json',
-      'x-contract-type':'merge',
-      'x-contract-id':utils.diggerid()
-    }
-  })
-
-  return this.supplychain ? this.supplychain.contract(topcontract, self).expect('containers') : topcontract;
 }
 
-/*
-
-  POST
-  
-*/
 function append(appendcontainer){
-
-  var self = this;
   
-  if(arguments.length<=0 || appendcontainer.count()<=0){
-    throw new Error('there is nothing to append');
-  }
+  var self = this;
+
+  var req = null;
 
   if(this.count()<=0){
-    throw new Error('there is nothing to append to');
+    return new Contract();
   }
 
-  appendcontainer.recurse(function(a){
-    a.removeAttr('_digger.diggerwarehouse');
-    a.removeAttr('_digger.diggerpath');
+  appendcontainer.recurse(function(container){
+    container.removeAttr('_digger.path');
+    container.removeAttr('_digger.inode');
   })
-
+  
   var appendmodels = appendcontainer.models;
   
   var appendto = this.eq(0);
@@ -307,34 +91,10 @@ function append(appendcontainer){
 
   appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
 
-  /*
-  
-    this is a direct request not a contract
-    
-  */
-  var raw = {
-    method:'post',
-    headers:{
-      'Content-Type':'application/json',
-      'x-contract-type':'merge',
-      'x-contract-id':utils.diggerid()
-    },
-    url:'/reception',
-    body:[{
-      method:'post',
-      headers:{
-        'Content-Type':'application/json',
-        'x-contract-id':utils.diggerid()
-      },
-      url:appendto.diggerurl(),
-      body:appendmodels
-    }]
-  }
-
+  this.ensure_meta();
   appendcontainer.supplychain = this.supplychain;
 
-  if(this.supplychain){
-    var contract = this.supplychain.contract(raw, self);
+  var contract = this.supplychain.contract(raw, self);
 
     contract.on('results', function(results){
       var map = {};
@@ -354,96 +114,60 @@ function append(appendcontainer){
 
     return contract;
   }
-  else{
-    return raw;
+
+  var req = {
+    method:'post',
+    url:'/data' + appendto.diggerurl(),
+    body:appendcontainer.models
   }
+
+  return new Contract(req, this.supplychain)
 }
 
-/*
 
-  PUT
-  
-*/
 function save(){
-
   var self = this;
+
   if(this.count()<=0){
-    throw new Error('there is nothing to save');
+    return new Contract();
   }
 
-
-  var raw = {
+  var req = {
     method:'post',
-    headers:{
-      'Content-Type':'application/json',
-      'x-contract-type':'merge',
-      'x-contract-id':utils.diggerid()
-    },
-    url:'/reception',
+    url:'/merge',
     body:this.map(function(container){
       var model = container.get(0);
       var savemodel = JSON.parse(JSON.stringify(model));
       delete(savemodel._children);
       delete(savemodel._digger.data);
-
-      // remove the linked attributes we don't want to save those
-      var links = container.digger('symlinks') || {};
-
-      for(var linkid in links){
-        var link = links[linkid];
-
-        if(link.type=='attr'){
-          delete(savemodel[link.field]);
-        }
-      }
-
-
       return {
         method:'put',
-        headers:{
-          'Content-Type':'application/json',
-          'x-contract-id':utils.diggerid()
-        },
         url:container.diggerurl(),
         body:savemodel
       }
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
+  return new Contract(req, this.supplychain);
 }
 
-/*
-
-  DELETE
-  
-*/
 function remove(){
-
   var self = this;
+
   if(this.count()<=0){
-    throw new Error('there is nothing to delete');
+    return new Contract();
   }
 
-  var raw = {
+  var req = {
     method:'post',
-    url:'/reception',
-    headers:{
-      'Content-Type':'application/json',
-      'x-contract-type':'merge',
-      'x-contract-id':utils.diggerid()
-    },
+    url:'/merge',
     body:this.map(function(container){
       return {
         method:'delete',
-        headers:{
-          'Content-Type':'application/json',
-          'x-contract-id':utils.diggerid()
-        },
         url:container.diggerurl()
       }
     })
   }
 
-  return this.supplychain ? this.supplychain.contract(raw, self) : raw;
+  return new Contract(req, this.supplychain);
 }
