@@ -1,13 +1,11 @@
 var utils = require('digger-utils');
 var EventEmitter = require('events').EventEmitter;
 
-module.exports = function(supplychain){
-  return {
-    select:select(supplychain),
-    append:append(supplychain),
-    save:save(supplychain),
-    remove:remove(supplychain)
-  }
+module.exports = {
+  select:select,
+  append:append,
+  save:save,
+  remove:remove
 }
 
 function Contract(req, supplychain){
@@ -53,16 +51,16 @@ function select(selector_string, context_string){
   }
 
   var req = {
-      method:'post',
-      url:'/select',
-      headers:{
-        'x-digger-selector':selector_string,
-        'x-digger-context:':context_string
-      },
-      body:this.map(function(container){
-        return container.diggerurl()
-      })
-    }
+    method:'post',
+    url:'/select',
+    headers:{
+      'x-digger-selector':selector_string,
+      'x-digger-context':context_string,
+      'Content-Type':'application/json'
+    },
+    body:this.map(function(container){
+      return container.diggerurl()
+    })
   }
 
   return new Contract(req, this.supplychain)
@@ -94,6 +92,7 @@ function append(appendcontainer){
   this.ensure_meta();
   appendcontainer.supplychain = this.supplychain;
 
+/*
   var contract = this.supplychain.contract(raw, self);
 
     contract.on('results', function(results){
@@ -113,13 +112,17 @@ function append(appendcontainer){
     })
 
     return contract;
-  }
+  }*/
 
   var req = {
     method:'post',
     url:'/data' + appendto.diggerurl(),
+    headers:{
+      'Content-Type':'application/json'
+    },
     body:appendcontainer.models
   }
+
 
   return new Contract(req, this.supplychain)
 }
@@ -135,6 +138,9 @@ function save(){
   var req = {
     method:'post',
     url:'/merge',
+    headers:{
+      'Content-Type':'application/json'
+    },
     body:this.map(function(container){
       var model = container.get(0);
       var savemodel = JSON.parse(JSON.stringify(model));
@@ -142,7 +148,7 @@ function save(){
       delete(savemodel._digger.data);
       return {
         method:'put',
-        url:container.diggerurl(),
+        url:'/data' + container.diggerurl(),
         body:savemodel
       }
     })
@@ -161,10 +167,13 @@ function remove(){
   var req = {
     method:'post',
     url:'/merge',
+    headers:{
+      'Content-Type':'application/json'
+    },
     body:this.map(function(container){
       return {
         method:'delete',
-        url:container.diggerurl()
+        url:'/data' + container.diggerurl()
       }
     })
   }
