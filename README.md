@@ -6,78 +6,73 @@ digger-contracts
 The contract factory for digger server requests
 
 ## installation
-	
-	$ npm install digger-contracts
 
-or in the browser using [browserify](https://github.com/substack/node-browserify)
+```	
+$ npm install digger-contracts
+```
+
+## usage
+
+There are four types of contract that digger can resolve:
+
+ * select - load data from below a container using a selector filter
+ * append - add containers to another container
+ * save - update the data for a container
+ * remove - remove a container
 
 ## select example
-Generate a HTTP request representing a select query upon a digger container
+Generate a select contract from a container by running the container as a function or running the 'select' method.
+
+You give the selector and context as arguments - the context is piped into the selector.
 
 ```js
-var Container = require('digger-container');
-var Contracts = require('digger-contracts');
+var container = $digger.connect('/my/location');
+var contract = container('folder.red', '#top');
 
-Container.augment_prototype(Contracts);
-
-var container = Container('product');
-container.diggerwarehouse('/api/db3');
-container.diggerid(123);
-
-
-var contract = container('product');
+console.log(contract.parse());
 
 /*
-
-	{
-		method:'post',
-		url:'/reception',
-		body:[{
-			method:'post',
-			url:'/api/db3/123/resolve',
-			body:{
-				selectors:[[[{
-					tag:'product'
-				}]]],
-				skeleton:{
-					diggerid:123
-				}
-			}
-		}]
+{
+	method:'post',
+	url:'/select',
+	headers:{
+		'x-digger-selector':'folder.red',
+		'x-digger-context':'#top'
 	}
-	
+	body:[
+		'/my/location'
+	]
+}	
 */
 ```
 
 ## append example
-Generate a HTTP request representing an append query upon a digger container
+Generate an append contract by appending a container to another container:
 
 ```js
-var Container = require('digger-container');
-var Contracts = require('digger-contracts');
+var container = $digger.connect('/my/location');
 
-Container.augment_prototype(Contracts);
-
-var container = Container('product');
-container.diggerwarehouse('/api/db3');
-container.diggerid(123);
-
-var child = Container('review', {
-	title:'text'
-});
+var child = $digger.create('folder', {
+	name:'test'
+})
 
 var contract = container.append(child);
+
+console.log(contract.parse());
+
 
 /*
 
 	{
 		method:'post',
-		url:'/api/db3/123',
+		url:'/my/location',
 		body:[{
-			title:'text',
+			name:'test',
 			_digger:{
-				tag:'review',
-				diggerid:456 // auto-generated
+				tag:'folder',
+				diggerid:3249394383838,
+				path:'/my/location',
+				inode:'df9f83'
 			}
 		}]
 	}
@@ -87,69 +82,53 @@ var contract = container.append(child);
 
 
 ## save example
-Generate a HTTP request representing a save query upon a digger container
+Generate a save contract by calling the save method on a container:
 
 ```js
-var Container = require('digger-container');
-var Contracts = require('digger-contracts');
+var warehouse = $digger.connect('/my/location');
 
-Container.augment_prototype(Contracts);
+warehouse('folder.red').ship(function(folder){
+	var contract = folder.attr('price', 34).save();
 
-var container = Container('product');
-container.diggerwarehouse('/api/db3');
-container.diggerid(123);
-
-container.attr('fruit', 'apples').addClass('green');
-
-var contract = container.save();
+	console.log(contract.parse());
+})
 
 /*
 
 	{
-		method:'post',
-		url:'/reception',
-		body:[{
-			method:'put',
-			url:'/api/db3/123',
-			body:{
-				fruit:'apples',
-				_digger:{
-					diggerwarehouse:'/api/db3',
-					diggerid:123,
-					tag:'product',
-					class:['green']
-				}
+		method:'put',
+		url:'/data/my/location/343fc3/33f33f',
+		body:{
+			name:'item',
+			price:34,
+			_digger:{
+				path:'/my/location/343fc3/33f33f',
+				tag:'folder',
+				class:['red']
 			}
-		}]
+		}
 	}
 	
 */
 ```
 
 ## remove example
-Generate a HTTP request representing a save query upon a digger container
+Generate a remove contract:
 
 ```js
-var Container = require('digger-container');
-var Contracts = require('digger-contracts');
+var warehouse = $digger.connect('/my/location');
 
-Container.augment_prototype(Contracts);
+warehouse('folder.red').ship(function(folder){
+	var contract = folder.remove();
 
-var container = Container('product');
-container.diggerwarehouse('/api/db3');
-container.diggerid(123);
-
-var contract = container.remove();
+	console.log(contract.parse());
+})
 
 /*
 
 	{
-		method:'post',
-		url:'/reception',
-		body:[{
-			method:'delete',
-			url:'/api/db3/123'
-		}]
+		method:'delete',
+		url:'/data/my/location/343fc3/33f33f'
 	}
 	
 */

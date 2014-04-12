@@ -1,61 +1,11 @@
 var utils = require('digger-utils');
-var EventEmitter = require('events').EventEmitter;
+var Contract = require('./contract');
 
 module.exports = {
   select:select,
   append:append,
   save:save,
   remove:remove
-}
-
-function Contract(req, supplychain){
-  EventEmitter.call(this);
-  this.req = req;
-  this.supplychain = supplychain;
-}
-
-Contract.prototype.stream = function(){
-  if(!this.req){
-    this.emit('error', 'no models in container');
-    return;
-  }
-  if(!this.supplychain){
-    this.emit('error', 'no supplychain assigned');
-    return;
-  }
-  return this.supplychain.stream(this);
-}
-
-Contract.prototype.ship = function(fn){
-  if(!this.req){
-    this.emit('error', 'no models in container');
-    return;
-  }
-  if(!this.supplychain){
-    this.emit('error', 'no supplychain assigned');
-    return;
-  }
-  return this.supplychain.ship(this, fn);
-}
-
-Contract.prototype.merge = function(contract){
-  if(this.req.url==='/merge'){
-    if(contract.req.url==='/merge'){
-      this.req.body = (this.req.body || []).concat(contract.req.body);
-    }
-    else{
-      this.req.body.push(contract.req)
-    }
-  }
-  else{
-    this.req = {
-      method:'post',
-      url:'/merge',
-      body:[this.req, contract.req]
-    }
-  }
-
-  return this;
 }
 
 function select(selector_string, context_string){
@@ -96,20 +46,23 @@ function append(appendcontainer){
     return new Contract();
   }
 
-  appendcontainer.recurse(function(container){
-    container.removeAttr('_digger.path');
-    container.removeAttr('_digger.inode');
-  })
-  
-  var appendmodels = appendcontainer.models;
-  
+  var appendmodels = [];
   var appendto = this.eq(0);
   var appendtomodel = this.get(0);
 
-  appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
+  if(appendcontainer){
 
-  this.ensure_meta();
-  appendcontainer.supplychain = this.supplychain;
+    appendcontainer.recurse(function(container){
+      container.removeAttr('_digger.path');
+      container.removeAttr('_digger.inode');
+    })  
+
+    appendmodels = appendcontainer.models;
+    appendcontainer.supplychain = this.supplychain;
+
+    appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
+    this.ensure_meta();
+  }
 
 /*
   var contract = this.supplychain.contract(raw, self);
@@ -139,7 +92,7 @@ function append(appendcontainer){
     headers:{
       'Content-Type':'application/json'
     },
-    body:appendcontainer.models
+    body:appendmodels || []
   }
 
 

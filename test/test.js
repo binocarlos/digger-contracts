@@ -227,4 +227,78 @@ describe('contract', function(){
   })
 
 
+  it('should pipe a select contract to an append contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var placeB = Container('testb');
+    placeB.path('/124');
+    placeB.inode('11');
+
+    var contract = placeA('thing').pipe(placeB.append());
+
+    contract.req.method.should.equal('post')
+    contract.req.url.should.equal('/pipe');
+    contract.req.body.length.should.equal(2);
+    contract.req.body[0].method.should.equal('post');
+    contract.req.body[0].url.should.equal('/select');
+    contract.req.body[0].headers['x-digger-selector'].should.equal('thing');
+    contract.req.body[0].body[0].should.equal('/123/10');
+
+    contract.req.body[1].method.should.equal('post');
+    contract.req.body[1].url.should.equal('/data/124/11');
+  })
+
+
+
+  it('should pipe a merge contract to an append contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var placeB = Container('testb');
+    placeB.path('/124');
+    placeB.inode('11');
+
+    var placeC = Container('testc');
+    placeC.path('/125');
+    placeC.inode('12');
+
+    var contract = placeA('thing').merge(placeB('otherthing')).pipe(placeC.append())
+
+    contract.req.method.should.equal('post')
+    contract.req.url.should.equal('/pipe');
+    contract.req.body.length.should.equal(2);
+    contract.req.body[0].method.should.equal('post');
+    contract.req.body[0].url.should.equal('/merge');
+    contract.req.body[0].body.length.should.equal(2);
+    contract.req.body[0].body[0].method.should.equal('post');
+    contract.req.body[0].body[0].url.should.equal('/select');
+    contract.req.body[0].body[0].body[0].should.equal('/123/10');
+    contract.req.body[0].body[1].method.should.equal('post');
+    contract.req.body[0].body[1].url.should.equal('/select');
+    contract.req.body[0].body[1].body[0].should.equal('/124/11');
+
+    contract.req.body[1].method.should.equal('post');
+    contract.req.body[1].url.should.equal('/data/125/12');
+  })
+
+
+
+  it('should parse into the simplest form', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var savecontract = placeA.save().parse();
+    var removecontract = placeA.remove().parse();
+
+    savecontract.req.method.should.equal('put');
+    savecontract.req.url.should.equal('/data/123/10');
+
+    removecontract.req.method.should.equal('delete');
+    removecontract.req.url.should.equal('/data/123/10');
+  })
+
 })
