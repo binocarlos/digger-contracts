@@ -14,33 +14,12 @@ function Contract(req, supplychain){
   this.supplychain = supplychain;
 }
 
-/*
 Contract.prototype.stream = function(){
-  return this.supplychain.stream(this.req);
-}*/
+  return this.supplychain.stream(this);
+}
 
 Contract.prototype.ship = function(fn){
-  var self = this;
-  if(!this.req){
-    this.emit('error', 'No request given');
-    fn && fn('No request given');
-    return;
-  }
-  if(!this.supplychain){
-    this.emit('error', 'No supplychain registered');
-    fn && fn('No supplychain registered');
-    return;
-  }
-  this.supplychain.emit('request', this.req, function(error, results){
-    if(error){
-      self.emit('error', error);
-    }
-    else{
-      self.emit('success', results);
-    }
-    self.emit('complete', error, results);
-    fn && fn(error, results);
-  })
+  return this.supplychain.ship(this);
 }
 
 function select(selector_string, context_string){
