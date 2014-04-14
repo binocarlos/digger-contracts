@@ -22,7 +22,7 @@ Contract.prototype.stream = function(){
   return this.supplychain.stream(this);
 }
 
-Contract.prototype.ship = function(fn){
+Contract.prototype.ship = function(fn, errorfn){
   if(!this.req){
     this.emit('error', 'no models in container');
     return;
@@ -31,52 +31,67 @@ Contract.prototype.ship = function(fn){
     this.emit('error', 'no supplychain assigned');
     return;
   }
-  return this.supplychain.ship(this, fn);
+  return this.supplychain.ship(this, fn, errorfn);
 }
 
-Contract.prototype.merge = function(contract){
-  if(this.req.url==='/merge'){
-    if(contract.req.url==='/merge'){
-      this.req.body = (this.req.body || []).concat(contract.req.body);
+Contract.prototype.then = Contract.prototype.ship;
+
+
+function flatten(req){
+  var newreq = JSON.parse(JSON.stringify(req))
+  var url = req.url;
+
+  var newarr = [];
+
+  (newreq.body || []).forEach(function(c){
+    if(c.url===url){
+      newarr = newarr.concat(c.body)
     }
     else{
-      this.req.body.push(contract.req)
+      newarr.push(c);
+    }
+  })
+
+  newreq.body = newarr;
+
+  if(newreq.body.length===1){
+    newreq = newreq.body[0];
+  }
+
+  return newreq;
+}
+
+function addcontract(url, contract, newcontract){
+  var newreq = JSON.parse(JSON.stringify(contract.req))
+
+  if(contract.req.url===url){
+    if(newcontract.req.url===url){
+      newreq.body = (newreq.body || []).concat(newcontract.req.body);
+    }
+    else{
+      newreq.body.push(newcontract.req)
     }
   }
   else{
-    this.req = {
+    newreq = {
       method:'post',
-      url:'/merge',
-      body:[this.req, contract.req]
+      url:url,
+      body:[newreq, newcontract.req]
     }
   }
 
-  return this;
+  return flatten(newreq);
+}
+
+
+Contract.prototype.merge = function(contract){
+  return new Contract(addcontract('/merge', this, contract), this.supplychain);
 }
 
 Contract.prototype.pipe = function(contract){
-  if(this.req.url==='/pipe'){
-    if(contract.req.url==='/pipe'){
-      this.req.body = (this.req.body || []).concat(contract.req.body);
-    }
-    else{
-      this.req.body.push(contract.req)
-    }
-  }
-  else{
-    this.req = {
-      method:'post',
-      url:'/pipe',
-      body:[this.req, contract.req]
-    }
-  }
-
-  return this;
+  return new Contract(addcontract('/pipe', this, contract), this.supplychain);
 }
 
-Contract.prototype.parse = function(){
-  if((this.req.url==='/merge' || this.req.url==='/pipe') && this.req.body.length<=1){
-    this.req = this.req.body[0];
-  }
-  return this;
+Contract.prototype.flatten = function(){
+  return new Contract(flatten(this.req), this.supplychain);
 }

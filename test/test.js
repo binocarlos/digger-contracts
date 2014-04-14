@@ -161,6 +161,8 @@ describe('contract', function(){
 
     reqB.method.should.equal('delete');
     reqB.url.should.equal('/data/124/11');
+
+
   })
 
 
@@ -291,14 +293,30 @@ describe('contract', function(){
     placeA.path('/123');
     placeA.inode('10');
 
-    var savecontract = placeA.save().parse();
-    var removecontract = placeA.remove().parse();
+    
+    var savecontract = placeA.save();
+    var removecontract = placeA.remove();
+
+    var combocontract = savecontract.merge(removecontract);
+
+    savecontract = savecontract.flatten();
+    removecontract = removecontract.flatten();
+    combocontract = combocontract.flatten();
 
     savecontract.req.method.should.equal('put');
     savecontract.req.url.should.equal('/data/123/10');
 
     removecontract.req.method.should.equal('delete');
     removecontract.req.url.should.equal('/data/123/10');
+
+    combocontract.req.method.should.equal('post');
+    combocontract.req.url.should.equal('/merge');
+    combocontract.req.body[0].url.should.equal('/data/123/10')
+    combocontract.req.body[0].method.should.equal('put')
+    combocontract.req.body[1].url.should.equal('/data/123/10')
+    combocontract.req.body[1].method.should.equal('delete')
+
+    
   })
 
 })
