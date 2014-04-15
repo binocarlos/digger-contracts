@@ -55,12 +55,16 @@ function append(appendcontainer){
     appendcontainer.recurse(function(container){
       container.removeAttr('_digger.path');
       container.removeAttr('_digger.inode');
+      container.removeAttr('_data');
     })  
 
     appendmodels = appendcontainer.models;
     appendcontainer.supplychain = this.supplychain;
 
     appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
+
+    appendmodels = JSON.parse(JSON.stringify(appendmodels));
+
     this.ensure_meta();
   }
 
