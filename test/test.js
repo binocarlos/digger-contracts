@@ -319,4 +319,22 @@ describe('contract', function(){
     
   })
 
+
+
+
+  it('should sort out the paths for appended containers', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var subplaceB = Container('testb')
+
+    placeA.append(subplaceB)
+
+    subplaceB.path().should.equal('/123/10')
+
+    
+  })
+
+  
 })

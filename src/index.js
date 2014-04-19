@@ -20,7 +20,6 @@ function select(selector_string, context_string){
     url:'/select',
     headers:{
       'x-digger-selector':selector_string,
-      
       'Content-Type':'application/json'
     },
     body:this.map(function(container){
@@ -52,18 +51,21 @@ function append(appendcontainer){
 
   if(appendcontainer){
 
-    appendcontainer.recurse(function(container){
-      container.removeAttr('_digger.path');
-      container.removeAttr('_digger.inode');
+    function recurse(container, parent){
       container.removeAttr('_data');
-    })  
+      container.inode(utils.littleid())
+      container.path(parent.diggerurl())
+      container.children().each(function(c){
+        recurse(c, container)
+      })
+    }
+
+    recurse(appendcontainer, appendto)
 
     appendmodels = appendcontainer.models;
     appendcontainer.supplychain = this.supplychain;
 
     appendtomodel._children = (appendtomodel._children || []).concat(appendmodels);
-
-    appendmodels = JSON.parse(JSON.stringify(appendmodels));
 
     this.ensure_meta();
   }
