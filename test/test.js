@@ -336,5 +336,25 @@ describe('contract', function(){
     
   })
 
+
+  it('should not have _data in an append contract', function(){
+    var placeA = Container('testa');
+    placeA.path('/123');
+    placeA.inode('10');
+
+    var subplaceB = Container('testb')
+
+    var contract = placeA.append(subplaceB)
+
+    var model = contract.req.body[0]
+    
+    if(model._data){
+        throw new Error('should not have _data')
+    }
+    
+
+    
+  })
+
   
 })

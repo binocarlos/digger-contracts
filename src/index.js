@@ -92,6 +92,20 @@ function append(appendcontainer){
     return contract;
   }*/
 
+  appendmodels = JSON.parse(JSON.stringify(appendmodels))
+
+  function stripdata(model){
+    
+    delete(model._data)
+    model._children = (model._children || []).map(function(c){
+      return stripdata(c)
+    })
+
+    return model
+  }
+
+  appendmodels = appendmodels.map(stripdata)
+
   var req = {
     method:'post',
     url:'/data' + appendto.diggerurl(),
@@ -102,7 +116,19 @@ function append(appendcontainer){
   }
 
 
-  return new Contract(req, this.supplychain)
+  var contract = new Contract(req, this.supplychain)
+
+  // merge in the data once its appended
+  contract.on('success', function(results){
+    results.each(function(r){
+      var hit = appendcontainer.find('=' + r.diggerid())
+      if(hit){
+        hit.inject_data(r.get(0))
+      }
+    })
+  })
+
+  return contract
 }
 
 
@@ -123,7 +149,7 @@ function save(){
       var model = container.get(0);
       var savemodel = JSON.parse(JSON.stringify(model));
       delete(savemodel._children);
-      delete(savemodel._digger.data);
+      delete(savemodel._data);
       return {
         method:'put',
         url:'/data' + container.diggerurl(),
