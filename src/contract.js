@@ -22,6 +22,18 @@ Contract.prototype.stream = function(){
   return this.supplychain.stream(this);
 }
 
+Contract.prototype.duplex = function(){
+  if(!this.req){
+    this.emit('error', 'no models in container');
+    return;
+  }
+  if(!this.supplychain){
+    this.emit('error', 'no supplychain assigned');
+    return;
+  }
+  return this.supplychain.duplex(this);
+}
+
 Contract.prototype.ship = function(fn, errorfn){
   if(!this.req){
     this.emit('error', 'no models in container');
