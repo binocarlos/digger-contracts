@@ -30,8 +30,8 @@ describe('contract', function(){
     contract.req.headers['x-digger-context'].should.equal('product, otherthing');
     
     contract.req.body.length.should.equal(2);
-    contract.req.body[0].should.equal('/placeA/10');
-    contract.req.body[1].should.equal('/placeA/11');
+    contract.req.body[0].should.equal('/warehouse/placeA/10');
+    contract.req.body[1].should.equal('/warehouse/placeA/11');
 
   })
 
@@ -59,7 +59,7 @@ describe('contract', function(){
     contract.req.headers['x-digger-context'].should.equal('folder#hello');
 
     contract.req.body.length.should.equal(1);
-    contract.req.body[0].should.equal('/123/10')
+    contract.req.body[0].should.equal('/warehouse/123/10')
   })
 
 
@@ -85,7 +85,7 @@ describe('contract', function(){
     var req = contract.req;
 
     req.method.should.equal('post');
-    req.url.should.equal('/data/123/10');
+    req.url.should.equal('/warehouse/123/10');
 
     req.body.length.should.equal(1);
 
@@ -109,9 +109,47 @@ describe('contract', function(){
     var req = contract.req.body[0];
 
     req.method.should.equal('put');
-    req.url.should.equal('/data/123/10');
+    req.url.should.equal('/warehouse/123/10');
     req.body.test.should.equal(10);
     req.body._digger.tag.should.equal('testa');
+  })
+
+
+  it('should create a save contract with multiple models', function(){
+    var stuff = Container([{
+        name:'testa',
+        _digger:{
+            path:'/123',
+            inode:'10'
+        }
+    },{
+        name:'testb',
+        _digger:{
+            path:'/123',
+            inode:'11'
+        }
+    }])
+
+    stuff.attr('test', 10);
+
+    var contract = stuff.save();
+
+    contract.req.method.should.equal('post');
+    contract.req.url.should.equal('/merge');
+
+    contract.req.body.length.should.equal(2);
+
+    var reqa = contract.req.body[0];
+
+    reqa.method.should.equal('put');
+    reqa.url.should.equal('/warehouse/123/10');
+    reqa.body.test.should.equal(10);
+    
+    var reqb = contract.req.body[1];
+
+    reqb.method.should.equal('put');
+    reqb.url.should.equal('/warehouse/123/11');
+    reqb.body.test.should.equal(10);
   })
 
   it('should create a remove contract', function(){
@@ -129,7 +167,7 @@ describe('contract', function(){
     var req = contract.req.body[0];
 
     req.method.should.equal('delete');
-    req.url.should.equal('/data/123/10');
+    req.url.should.equal('/warehouse/123/10');
   })
 
   it('should merge an existing contract with another merge contract', function(){
@@ -155,12 +193,12 @@ describe('contract', function(){
     var reqA = contract.req.body[0];
 
     reqA.method.should.equal('delete');
-    reqA.url.should.equal('/data/123/10');
+    reqA.url.should.equal('/warehouse/123/10');
 
     var reqB = contract.req.body[1];
 
     reqB.method.should.equal('delete');
-    reqB.url.should.equal('/data/124/11');
+    reqB.url.should.equal('/warehouse/124/11');
 
 
   })
@@ -189,12 +227,12 @@ describe('contract', function(){
     var reqA = contract.req.body[0];
 
     reqA.method.should.equal('post');
-    reqA.url.should.equal('/data/123/10');
+    reqA.url.should.equal('/warehouse/123/10');
 
     var reqB = contract.req.body[1];
 
     reqB.method.should.equal('post');
-    reqB.url.should.equal('/data/124/11');
+    reqB.url.should.equal('/warehouse/124/11');
   })
 
   it('should merge an select contract with another merge contract', function(){
@@ -220,7 +258,7 @@ describe('contract', function(){
     var reqA = contract.req.body[0];
 
     reqA.method.should.equal('post');
-    reqA.url.should.equal('/data/123/10');
+    reqA.url.should.equal('/warehouse/123/10');
 
     var reqB = contract.req.body[1];
 
@@ -246,10 +284,10 @@ describe('contract', function(){
     contract.req.body[0].method.should.equal('post');
     contract.req.body[0].url.should.equal('/select');
     contract.req.body[0].headers['x-digger-selector'].should.equal('thing');
-    contract.req.body[0].body[0].should.equal('/123/10');
+    contract.req.body[0].body[0].should.equal('/warehouse/123/10');
 
     contract.req.body[1].method.should.equal('post');
-    contract.req.body[1].url.should.equal('/data/124/11');
+    contract.req.body[1].url.should.equal('/warehouse/124/11');
   })
 
 
@@ -277,13 +315,13 @@ describe('contract', function(){
     contract.req.body[0].body.length.should.equal(2);
     contract.req.body[0].body[0].method.should.equal('post');
     contract.req.body[0].body[0].url.should.equal('/select');
-    contract.req.body[0].body[0].body[0].should.equal('/123/10');
+    contract.req.body[0].body[0].body[0].should.equal('/warehouse/123/10');
     contract.req.body[0].body[1].method.should.equal('post');
     contract.req.body[0].body[1].url.should.equal('/select');
-    contract.req.body[0].body[1].body[0].should.equal('/124/11');
+    contract.req.body[0].body[1].body[0].should.equal('/warehouse/124/11');
 
     contract.req.body[1].method.should.equal('post');
-    contract.req.body[1].url.should.equal('/data/125/12');
+    contract.req.body[1].url.should.equal('/warehouse/125/12');
   })
 
 
@@ -304,16 +342,16 @@ describe('contract', function(){
     combocontract = combocontract.flatten();
 
     savecontract.req.method.should.equal('put');
-    savecontract.req.url.should.equal('/data/123/10');
+    savecontract.req.url.should.equal('/warehouse/123/10');
 
     removecontract.req.method.should.equal('delete');
-    removecontract.req.url.should.equal('/data/123/10');
+    removecontract.req.url.should.equal('/warehouse/123/10');
 
     combocontract.req.method.should.equal('post');
     combocontract.req.url.should.equal('/merge');
-    combocontract.req.body[0].url.should.equal('/data/123/10')
+    combocontract.req.body[0].url.should.equal('/warehouse/123/10')
     combocontract.req.body[0].method.should.equal('put')
-    combocontract.req.body[1].url.should.equal('/data/123/10')
+    combocontract.req.body[1].url.should.equal('/warehouse/123/10')
     combocontract.req.body[1].method.should.equal('delete')
 
     
@@ -322,16 +360,18 @@ describe('contract', function(){
 
 
 
-  it('should sort out the paths for appended containers', function(){
+  it('should sort out the paths for appended containers and not overwrite their inodes', function(){
     var placeA = Container('testa');
     placeA.path('/123');
     placeA.inode('10');
 
     var subplaceB = Container('testb')
+    subplaceB.inode('yo')
 
-    placeA.append(subplaceB)
+    var contract = placeA.append(subplaceB)
 
     subplaceB.path().should.equal('/123/10')
+    subplaceB.inode().should.equal('yo')
 
     
   })

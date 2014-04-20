@@ -23,7 +23,7 @@ function select(selector_string, context_string){
       'Content-Type':'application/json'
     },
     body:this.map(function(container){
-      return container.diggerurl()
+      return '/warehouse' + container.diggerurl()
     })
   }
 
@@ -53,7 +53,9 @@ function append(appendcontainer){
 
     function recurse(container, parent){
       container.removeAttr('_data');
-      container.inode(utils.littleid())
+      if(!container.inode()){
+        container.inode(utils.littleid())  
+      }
       container.path(parent.diggerurl())
       container.children().each(function(c){
         recurse(c, container)
@@ -108,7 +110,7 @@ function append(appendcontainer){
 
   var req = {
     method:'post',
-    url:'/data' + appendto.diggerurl(),
+    url:'/warehouse' + appendto.diggerurl(),
     headers:{
       'Content-Type':'application/json'
     },
@@ -152,7 +154,7 @@ function save(){
       delete(savemodel._data);
       return {
         method:'put',
-        url:'/data' + container.diggerurl(),
+        url:'/warehouse' + container.diggerurl(),
         body:savemodel
       }
     })
@@ -177,7 +179,7 @@ function remove(){
     body:this.map(function(container){
       return {
         method:'delete',
-        url:'/data' + container.diggerurl()
+        url:'/warehouse' + container.diggerurl()
       }
     })
   }
