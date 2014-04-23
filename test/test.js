@@ -110,8 +110,8 @@ describe('contract', function(){
 
     req.method.should.equal('put');
     req.url.should.equal('/warehouse/123/10');
-    req.body.test.should.equal(10);
-    req.body._digger.tag.should.equal('testa');
+    req.body[0].test.should.equal(10);
+    req.body[0]._digger.tag.should.equal('testa');
   })
 
 
@@ -143,13 +143,13 @@ describe('contract', function(){
 
     reqa.method.should.equal('put');
     reqa.url.should.equal('/warehouse/123/10');
-    reqa.body.test.should.equal(10);
+    reqa.body[0].test.should.equal(10);
     
     var reqb = contract.req.body[1];
 
     reqb.method.should.equal('put');
     reqb.url.should.equal('/warehouse/123/11');
-    reqb.body.test.should.equal(10);
+    reqb.body[0].test.should.equal(10);
   })
 
   it('should create a remove contract', function(){
@@ -168,6 +168,7 @@ describe('contract', function(){
 
     req.method.should.equal('delete');
     req.url.should.equal('/warehouse/123/10');
+    req.body[0]._digger.path.should.equal('/123')
   })
 
   it('should merge an existing contract with another merge contract', function(){

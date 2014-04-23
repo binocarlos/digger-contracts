@@ -32,7 +32,6 @@ function select(selector_string, context_string){
   }
 
   return new Contract(req, this.supplychain)
-  
 }
 
 function append(appendcontainer){
@@ -155,7 +154,7 @@ function save(){
       return {
         method:'put',
         url:'/warehouse' + container.diggerurl(),
-        body:savemodel
+        body:[savemodel]
       }
     })
   }
@@ -177,9 +176,14 @@ function remove(){
       'Content-Type':'application/json'
     },
     body:this.map(function(container){
+      var model = container.get(0);
+      var removemodel = JSON.parse(JSON.stringify(model));
+      delete(removemodel._children);
+      delete(removemodel._data);
       return {
         method:'delete',
-        url:'/warehouse' + container.diggerurl()
+        url:'/warehouse' + container.diggerurl(),
+        body:[removemodel]
       }
     })
   }
