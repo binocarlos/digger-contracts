@@ -13,14 +13,12 @@ describe('contract', function(){
 
   it('should create a merge contract for multiple containers from different warehouses', function(){
 
-    var placeA = Container('_supplychain');
-    placeA.path('/placeA');
-    placeA.inode('10');
-    var placeB = Container('_supplychain');
-    placeB.path('/placeA');
-    placeB.inode('11');
+    var warehouseA = Container('_supplychain');
+    warehouseA.path('/placeA');
+    var warehouseB = Container('_supplychain');
+    warehouseB.path('/placeB');
     var holder = Container();
-    holder.add([placeA, placeB]);
+    holder.add([warehouseA, warehouseB]);
 
     var contract = holder('caption img', 'product, otherthing');
 
@@ -30,8 +28,8 @@ describe('contract', function(){
     contract.req.headers['x-digger-context'].should.equal('product, otherthing');
     
     contract.req.body.length.should.equal(2);
-    contract.req.body[0].should.equal('/warehouse/placeA/10');
-    contract.req.body[1].should.equal('/warehouse/placeA/11');
+    contract.req.body[0].should.equal('/warehouse/placeA');
+    contract.req.body[1].should.equal('/warehouse/placeB');
 
   })
 
