@@ -97,11 +97,11 @@ function addcontract(url, contract, newcontract){
 
 
 Contract.prototype.merge = function(contract){
-  return new Contract(addcontract('/merge', this, contract), this.supplychain);
+  return new Contract(addcontract(utils.urls.merge, this, contract), this.supplychain);
 }
 
 Contract.prototype.pipe = function(contract){
-  return new Contract(addcontract('/pipe', this, contract), this.supplychain);
+  return new Contract(addcontract(utils.urls.pipe, this, contract), this.supplychain);
 }
 
 Contract.prototype.flatten = function(){

@@ -17,13 +17,13 @@ function select(selector_string, context_string){
 
   var req = {
     method:'post',
-    url:'/select',
+    url:utils.urls.select,
     headers:{
       'x-digger-selector':selector_string,
       'Content-Type':'application/json'
     },
     body:this.map(function(container){
-      return '/warehouse' + container.diggerurl()
+      return container.diggerurl()
     })
   }
 
@@ -109,7 +109,7 @@ function append(appendcontainer){
 
   var req = {
     method:'post',
-    url:'/warehouse' + appendto.diggerurl(),
+    url:appendto.diggerurl(),
     headers:{
       'Content-Type':'application/json'
     },
@@ -142,7 +142,7 @@ function save(){
 
   var req = {
     method:'post',
-    url:'/merge',
+    url:utils.urls.merge,
     headers:{
       'Content-Type':'application/json'
     },
@@ -153,7 +153,7 @@ function save(){
       delete(savemodel._data);
       return {
         method:'put',
-        url:'/warehouse' + container.diggerurl(),
+        url:container.diggerurl(),
         body:[savemodel]
       }
     })
@@ -171,7 +171,7 @@ function remove(){
 
   var req = {
     method:'post',
-    url:'/merge',
+    url:utils.urls.merge,
     headers:{
       'Content-Type':'application/json'
     },
@@ -182,7 +182,7 @@ function remove(){
       delete(removemodel._data);
       return {
         method:'delete',
-        url:'/warehouse' + container.diggerurl(),
+        url:container.diggerurl(),
         body:[removemodel]
       }
     })
