@@ -182,8 +182,7 @@ function remove(){
       delete(removemodel._data);
       return {
         method:'delete',
-        url:container.diggerurl(),
-        body:[removemodel]
+        url:container.diggerurl()
       }
     })
   }
